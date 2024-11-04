@@ -159,7 +159,7 @@ export const getCopilotMetricsForOrgsFromDatabase = async (
 ): Promise<ServerActionResponse<CopilotUsageOutput[]>> => {
   const client = cosmosClient();
   const database = client.database("platform-engineering");
-  const container = database.container("history");
+  const container = database.container("usage_history");
 
   let start = "";
   let end = "";
@@ -205,7 +205,7 @@ export const getCopilotMetricsForEnterpriseFromDatabase = async (
 ): Promise<ServerActionResponse<CopilotUsageOutput[]>> => {
   const client = cosmosClient();
   const database = client.database("platform-engineering");
-  const container = database.container("history");
+  const container = database.container("usage_history");
 
   let start = "";
   let end = "";
