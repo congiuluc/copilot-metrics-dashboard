@@ -1,22 +1,22 @@
 ﻿using Microsoft.Azure.Functions.Worker;
-using Microsoft.CopilotDashboard.DataIngestion.Models;
+using Microsoft.CopilotDashboard.DataIngestion.Domain;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.CopilotDashboard.DataIngestion.Functions;
 
-public class CopilotDataIngestion
+public class CoPilotDataIngestion
 {
     private readonly ILogger _logger;
     private readonly GitHubCopilotUsageClient usageClient;
 
-    public CopilotDataIngestion(ILoggerFactory loggerFactory, GitHubCopilotUsageClient usageClient)
+    public CoPilotDataIngestion(ILoggerFactory loggerFactory, GitHubCopilotUsageClient usageClient)
     {
-        _logger = loggerFactory.CreateLogger<CopilotDataIngestion>();
+        _logger = loggerFactory.CreateLogger<CoPilotDataIngestion>();
         this.usageClient = usageClient;
     }
 
     [Function("GitHubCopilotDataIngestion")]
-    [CosmosDBOutput(databaseName: "platform-engineering", containerName: "history", Connection = "AZURE_COSMOSDB_ENDPOINT", CreateIfNotExists = true)]
+    [CosmosDBOutput(databaseName: "platform-engineering", containerName: "usage_history", Connection = "AZURE_COSMOSDB_ENDPOINT", CreateIfNotExists = true)]
     public async Task<List<CopilotUsage>> Run([TimerTrigger("0 0 * * * *")] TimerInfo myTimer)
     {
         _logger.LogInformation($"GitHubCopilotDataIngestion timer trigger function executed at: {DateTime.Now}");

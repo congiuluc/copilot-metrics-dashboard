@@ -1,4 +1,5 @@
-﻿using Microsoft.CopilotDashboard.DataIngestion.Models;
+﻿using Microsoft.CopilotDashboard.DataIngestion.Domain;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace Microsoft.CopilotDashboard.DataIngestion.Functions
@@ -16,7 +17,16 @@ namespace Microsoft.CopilotDashboard.DataIngestion.Functions
         public async Task<List<CopilotUsage>> GetCopilotMetricsForOrgsAsync()
         {
             var organization = Environment.GetEnvironmentVariable("GITHUB_ORGANIZATION");
-            var response = await _httpClient.GetAsync($"/orgs/{organization}/copilot/usage");
+            var apiVersion = Environment.GetEnvironmentVariable("GITHUB_API_VERSION");
+            var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+
+            _httpClient.BaseAddress = new Uri($"https://api.github.com/orgs/{organization}/copilot/usage");
+            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            _httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", apiVersion);
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "GitHubCoPilotUsageIngestion");
+
+            var response = await _httpClient.GetAsync("");
             if (!response.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Error fetching data: {response.StatusCode}");
@@ -30,7 +40,16 @@ namespace Microsoft.CopilotDashboard.DataIngestion.Functions
         public async Task<List<CopilotUsage>> GetCopilotMetricsForEnterpriseAsync()
         {
             var enterprise = Environment.GetEnvironmentVariable("GITHUB_ENTERPRISE");
-            var response = await _httpClient.GetAsync($"/enterprises/{enterprise}/copilot/usage");
+            var apiVersion = Environment.GetEnvironmentVariable("GITHUB_API_VERSION");
+            var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+
+            _httpClient.BaseAddress = new Uri($"https://api.github.com/enterprises/{enterprise}/copilot/usage");
+            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            _httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", apiVersion);
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "GitHubCoPilotUsageIngestion");
+
+            var response = await _httpClient.GetAsync("");
             if (!response.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Error fetching data: {response.StatusCode}");
