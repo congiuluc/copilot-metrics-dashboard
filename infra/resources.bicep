@@ -306,7 +306,7 @@ resource seatsContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/cont
       id: seatsContainerName
       partitionKey: {
         paths: [
-          '/Day'
+          '/day'
         ]
         kind: 'Hash'
       }
