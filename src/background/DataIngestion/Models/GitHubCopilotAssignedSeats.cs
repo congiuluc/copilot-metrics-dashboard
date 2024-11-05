@@ -63,13 +63,13 @@ public class GitHubCopilotAssignedSeats
     {
         if (!string.IsNullOrWhiteSpace(this.Organization))
         {
-            return $"ORG_{this.Organization}_{this.Day}";
+            return $"{this.Day}-ORG-{this.Organization}";
         }
         else if (!string.IsNullOrWhiteSpace(this.Enterprise))
         {
-            return $"ENT_{this.Enterprise}_{this.Day}";
+            return $"{this.Day}-ENT-{this.Enterprise}";
         }
-        return $"XXX_{this.Day}";
+        return $"{this.Day}-XXX";
     }
 }
 
