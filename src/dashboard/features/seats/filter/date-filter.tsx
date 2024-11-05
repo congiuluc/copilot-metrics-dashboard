@@ -3,8 +3,6 @@
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
 import * as React from "react";
-import { DateRange } from "react-day-picker";
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -17,25 +15,17 @@ import { useRouter } from "next/navigation";
 
 export const DateFilter = () => {
   const today = new Date();
-  // last 31 days
-  const lastThirtyOneDays = new Date(today);
-  lastThirtyOneDays.setDate(today.getDate() - 31);
 
-  const [date, setDate] = React.useState<DateRange>({
-    from: today,
-    to: today,
-  });
-
+  const [date, setDate] = React.useState<Date | undefined>(today);
   const [isOpen, setIsOpen] = React.useState(false);
 
   const router = useRouter();
 
   const applyFilters = () => {
-    if (date.from && date.to) {
-      const formatEndDate = format(date?.to, "yyyy-MM-dd");
-      const formatStartDate = format(date?.from, "yyyy-MM-dd");
+    if (date) {
+      const formattedDate = format(date, "yyyy-MM-dd");
 
-      router.push(`?startDate=${formatStartDate}&endDate=${formatEndDate}`, {
+      router.push(`?date=${formattedDate}`, {
         scroll: false,
       });
       router.refresh();
@@ -56,8 +46,8 @@ export const DateFilter = () => {
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              format(date.from, "LLL dd, y")
+            {date ? (
+              format(date, "LLL dd, y")
             ) : (
               <span>Pick a date</span>
             )}
@@ -70,11 +60,11 @@ export const DateFilter = () => {
           <Calendar
             initialFocus
             mode="single"
-            defaultMonth={date?.from}
-            selected={date?.from}
-            onSelect={(date) => {
-              if (date) {
-                setDate({ from: date, to: date });
+            defaultMonth={date}
+            selected={date}
+            onSelect={(selectedDate) => {
+              if (selectedDate) {
+                setDate(selectedDate);
               }
             }}
             numberOfMonths={1}

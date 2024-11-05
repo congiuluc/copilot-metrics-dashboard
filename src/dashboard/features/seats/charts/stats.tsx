@@ -35,7 +35,7 @@ function totalSeats(filteredData: CopilotSeatsData): TotalSeatsData {
 
 export const Stats = () => {
   const { filteredData } = useDashboard();
-  const totalSeatsData = totalSeats(filteredData[0]);
+  const totalSeatsData = totalSeats(filteredData);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 col-span-4">

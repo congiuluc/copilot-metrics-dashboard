@@ -10,8 +10,7 @@ import { format } from "date-fns";
 import { SqlQuerySpec } from "@azure/cosmos";
 
 export interface IFilter {
-  startDate?: Date;
-  endDate?: Date;
+  date?: Date;
   enterprise: string;
   organization: string;
   team: string; 
@@ -21,7 +20,7 @@ export interface IFilter {
 export const getCopilotSeats = async (
   filter: IFilter
 ): Promise<
-  ServerActionResponse<CopilotSeatsData[]>
+  ServerActionResponse<CopilotSeatsData>
 > => {
   const env = ensureGitHubEnvConfig();
 
@@ -50,31 +49,26 @@ export const getCopilotSeats = async (
 
 const getCopilotSeatsFromDatabase = async (
   filter: IFilter
-): Promise<ServerActionResponse<CopilotSeatsData[]>> => {
+): Promise<ServerActionResponse<CopilotSeatsData>> => {
   const client = cosmosClient();
   const database = client.database("platform-engineering");
   const container = database.container("seats_history");
 
-  let start = "";
-  let end = "";
-
+  let date = "";
   const maxDays = 365 * 2; // maximum 2 years of data
 
-  if (filter.startDate && filter.endDate) {
-    start = format(filter.startDate, "yyyy-MM-dd");
-    end = format(filter.endDate, "yyyy-MM-dd");
+  if (filter.date) {
+    date = format(filter.date, "yyyy-MM-dd");
   }else{
     const today = new Date();
-    start = format(today, "yyyy-MM-dd");
-    end = format(today, "yyyy-MM-dd");
+    date = format(today, "yyyy-MM-dd");
   }
 
   
   let querySpec: SqlQuerySpec = {
-    query: `SELECT * FROM c WHERE c.day >= @start AND c.day <= @end`,
+    query: `SELECT * FROM c WHERE c.day = @date`,
     parameters: [
-      { name: "@start", value: start },
-      { name: "@end", value: end },
+      { name: "@date", value: date }
     ],
   };
   if (filter.enterprise) {
@@ -99,6 +93,6 @@ const getCopilotSeatsFromDatabase = async (
  // const dataWithTimeFrame = applyTimeFrameLabel(resources);
   return {
     status: "OK",
-    response: resources,
+    response: resources[0],
   };
 };

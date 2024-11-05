@@ -16,7 +16,6 @@ export interface IProps {
 export default async function Dashboard(props: IProps) {
   const seatsPromise = getCopilotSeats(props.searchParams);
   const [seats] = await Promise.all([seatsPromise]);
-  console.log("seats");
   if (seats.status !== "OK") {
     return <ErrorPage error={seats.errors[0].message} />;
   }

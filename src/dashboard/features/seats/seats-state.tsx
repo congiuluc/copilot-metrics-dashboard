@@ -1,14 +1,12 @@
 "use client";
 
 import { PropsWithChildren } from "react";
-import { CopilotSeatsData } from "../common/models";
-import { formatDate } from "./utils/helpers";
-
+import { CopilotSeatsData } from "@/features/common/models";
 import { proxy, useSnapshot } from "valtio";
 
 
 interface IProps extends PropsWithChildren {
-  copilotSeats: CopilotSeatsData[];
+  copilotSeats: CopilotSeatsData;
 }
 
 export interface DropdownFilterItem {
@@ -17,15 +15,15 @@ export interface DropdownFilterItem {
 }
 
 class DashboardState {
-  public filteredData: CopilotSeatsData[] = [];
+  public filteredData: CopilotSeatsData = {} as CopilotSeatsData;
 
-  private apiData: CopilotSeatsData[] = [];
+  private apiData: CopilotSeatsData = {} as CopilotSeatsData;
 
   public initData(
-    data: CopilotSeatsData[]
+    data: CopilotSeatsData
   ): void {
-    this.apiData = [...data];
-    this.filteredData = [...data];
+    this.apiData = data;
+    this.filteredData = data;
   }
 
 }

@@ -1,23 +1,12 @@
 "use client";
-import {
-    Table,
-    TableHeader,
-    TableBody,
-    TableFooter,
-    TableHead,
-    TableRow,
-    TableCell,
-    TableCaption,
-} from "@/components/ui/table";
 import { useDashboard } from "./seats-state";
+import { ChartHeader } from "@/features/common/chart-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChartHeader } from "../common/chart-header";
-
-
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 
 export const SeatsTable = () => {
     const { filteredData } = useDashboard();
-    const currentData = filteredData[0];
+    const currentData = filteredData;
 
     return (
         <Card className="col-span-4">
@@ -25,7 +14,6 @@ export const SeatsTable = () => {
                 title="Assigned Seats"
                 description=""
             />
-
             <CardContent>
                 <Table className="min-w-full">
                     <TableHeader>
@@ -64,11 +52,5 @@ export const SeatsTable = () => {
                 </Table>
             </CardContent>
         </Card>
-    );
-
-    return (
-        <div className="grid grid-cols-1 col-span-4">
-
-        </div>
     );
 };

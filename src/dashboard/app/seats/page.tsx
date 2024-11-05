@@ -12,8 +12,8 @@ export default function Home(props: IProps) {
 
   let id = "initial-seats-dashboard";
 
-  if (props.searchParams.startDate && props.searchParams.endDate) {
-    id = `${id}-${props.searchParams.startDate}-${props.searchParams.endDate}`;
+  if (props.searchParams.date ) {
+    id = `${id}-${props.searchParams.date}`;
   }
 
   return (
