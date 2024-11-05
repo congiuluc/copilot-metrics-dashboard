@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Microsoft.DevOpsDashboard.DataIngestion.Domain;
+namespace Microsoft.CopilotDashboard.DataIngestion.Domain;
 
 public class GitHubTeam
 {

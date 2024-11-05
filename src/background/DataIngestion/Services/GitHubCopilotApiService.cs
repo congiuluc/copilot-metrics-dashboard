@@ -1,4 +1,4 @@
-﻿using Microsoft.DevOpsDashboard.DataIngestion.Domain;
+﻿using Microsoft.CopilotDashboard.DataIngestion.Domain;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Microsoft.DevOpsDashboard.DataIngestion.Services
+namespace Microsoft.CopilotDashboard.DataIngestion.Services
 {
     public class GitHubCopilotApiService
     {

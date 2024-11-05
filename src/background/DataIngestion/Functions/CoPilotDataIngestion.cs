@@ -1,8 +1,8 @@
 ﻿using Microsoft.Azure.Functions.Worker;
-using Microsoft.DevOpsDashboard.DataIngestion.Domain;
+using Microsoft.CopilotDashboard.DataIngestion.Domain;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DevOpsDashboard.DataIngestion.Functions;
+namespace Microsoft.CopilotDashboard.DataIngestion.Functions;
 
 public class CoPilotDataIngestion
 {

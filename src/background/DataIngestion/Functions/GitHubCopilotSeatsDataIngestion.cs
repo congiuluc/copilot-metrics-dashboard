@@ -1,11 +1,11 @@
 using System;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.DevOpsDashboard.DataIngestion.Domain;
-using Microsoft.DevOpsDashboard.DataIngestion.Services;
+using Microsoft.CopilotDashboard.DataIngestion.Domain;
+using Microsoft.CopilotDashboard.DataIngestion.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DevOpsDashboard.DataIngestion.Functions;
+namespace Microsoft.CopilotDashboard.DataIngestion.Functions;
 
 public class GitHubCopilotSeatsDataIngestion
 {

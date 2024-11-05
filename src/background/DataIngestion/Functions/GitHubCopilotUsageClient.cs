@@ -1,8 +1,8 @@
-﻿using Microsoft.DevOpsDashboard.DataIngestion.Domain;
+﻿using Microsoft.CopilotDashboard.DataIngestion.Domain;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace Microsoft.DevOpsDashboard.DataIngestion.Functions
+namespace Microsoft.CopilotDashboard.DataIngestion.Functions
 {
 
     public class GitHubCopilotUsageClient
