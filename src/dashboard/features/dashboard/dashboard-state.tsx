@@ -71,20 +71,7 @@ class DashboardState {
     this.languages.forEach((item) => (item.isSelected = false));
     this.editors.forEach((item) => (item.isSelected = false));
     this.hideWeekends = false;
-    
-    // Handle client-side filters
     this.applyFilters();
-    
-    // Handle server-side team filter by clearing URL parameter
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('team')) {
-        params.delete('team');
-        const queryString = params.toString();
-        const url = queryString ? `?${queryString}` : '/';
-        window.location.href = url;
-      }
-    }
   }
 
   public onTimeFrameChange(timeFrame: TimeFrame): void {
