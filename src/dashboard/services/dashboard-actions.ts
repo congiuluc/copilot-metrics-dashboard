@@ -1,5 +1,6 @@
 "use server";
 
+import { date } from "zod";
 import { getCopilotMetrics, IFilter as MetricsFilter } from "./copilot-metrics-service";
 import { getCopilotSeatsManagement, IFilter as SeatServiceFilter } from "./copilot-seat-service";
 
@@ -47,15 +48,13 @@ export async function refreshSeatsData(filter: {
   teams?: string[];
 }) {
   try {
-    const seatsFilter: SeatServiceFilter = {
+
+    const seats = await getCopilotSeatsManagement({
       date: filter.date,
       enterprise: filter.enterprise || "",
       organization: filter.organization || "",
       team: filter.teams || [],
-      page: 1,
-    };
-
-    const seats = await getCopilotSeatsManagement(seatsFilter);
+    } as SeatServiceFilter);
 
     if (seats.status !== "OK") {
       return {
