@@ -175,6 +175,8 @@ export const getCopilotMetricsFromDatabase = async (
         querySpec.parameters?.push({ name: `@team${index}`, value: team });
       });
     }
+  }else {
+    querySpec.query += ` AND c.team = null`;
   }
 
   const { resources } = await container.items
