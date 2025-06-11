@@ -16,17 +16,11 @@ import { getCopilotSeatsManagement, getAllCopilotSeatsTeams, IFilter as SeatServ
 import { cosmosConfiguration } from "@/services/cosmos-db-service";
 
 export interface IProps {
-  searchParams: MetricsFilter & {
-    teams?: string;
-  };
+  searchParams: MetricsFilter;
 }
 
 export default async function Dashboard(props: IProps) {
-  // Initialize with empty team array (no URL parsing)
-  const metricsFilter = {
-    ...props.searchParams,
-    team: [], // Start with no team filtering
-  };
+  const metricsFilter = props.searchParams;
 
   const metricsPromise = getCopilotMetrics(metricsFilter);
   const seatsPromise = getCopilotSeatsManagement({
