@@ -1,11 +1,5 @@
-import {
-  formatResponseError,
-  unknownResponseError,
-} from "@/features/common/response-error";
-import {
-  CopilotMetrics,
-  CopilotUsageOutput,
-} from "@/features/common/models";
+import { formatResponseError, unknownResponseError } from "@/features/common/response-error";
+import { CopilotMetrics, CopilotUsageOutput } from "@/features/common/models";
 import { ServerActionResponse } from "@/features/common/server-action-response";
 import { SqlQuerySpec } from "@azure/cosmos";
 import { format } from "date-fns";
@@ -96,15 +90,17 @@ export const getCopilotMetricsFromApi = async (
 
   try {
     const queryParams = new URLSearchParams();
-    
+
     if (filter.startDate) {
-      queryParams.append('since', format(filter.startDate, "yyyy-MM-dd"));
+      queryParams.append("since", format(filter.startDate, "yyyy-MM-dd"));
     }
     if (filter.endDate) {
-      queryParams.append('until', format(filter.endDate, "yyyy-MM-dd"));
+      queryParams.append("until", format(filter.endDate, "yyyy-MM-dd"));
     }
-    
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+    const queryString = queryParams.toString()
+      ? `?${queryParams.toString()}`
+      : "";
 
     if (filter.enterprise) {
       const url = `https://api.github.com/enterprises/${filter.enterprise}/copilot/metrics${queryString}`;
@@ -166,12 +162,14 @@ export const getCopilotMetricsFromDatabase = async (
       value: filter.organization,
     });
   }
-    if (filter.team && filter.team.length > 0) {
+  if (filter.team && filter.team.length > 0) {
     if (filter.team.length === 1) {
       querySpec.query += ` AND c.team = @team`;
       querySpec.parameters?.push({ name: "@team", value: filter.team[0] });
     } else {
-      const teamConditions = filter.team.map((_, index) => `c.team = @team${index}`).join(' OR ');
+      const teamConditions = filter.team
+        .map((_, index) => `c.team = @team${index}`)
+        .join(" OR ");
       querySpec.query += ` AND (${teamConditions})`;
       filter.team.forEach((team, index) => {
         querySpec.parameters?.push({ name: `@team${index}`, value: team });

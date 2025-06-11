@@ -22,7 +22,7 @@ import { DropdownFilterItem, useDashboard } from "../dashboard-state";
 interface DropdownFilterProps {
   name: string;
   onSelect: (name: string) => void;
-  onClose?: () => void;  // Optional callback when dropdown closes
+  onClose?: () => void; // Optional callback when dropdown closes
   allItems: DropdownFilterItem[];
 }
 
@@ -32,14 +32,20 @@ export function DropdownFilter(props: DropdownFilterProps) {
 
   return (
     <div className="flex items-center space-x-2">
-      <Popover onOpenChange={(open) => {
-        // When dropdown closes, call onClose if provided
-        if (!open && onClose) {
-          onClose();
-        }
-      }}>
+      <Popover
+        onOpenChange={(open) => {
+          // When dropdown closes, call onClose if provided
+          if (!open && onClose) {
+            onClose();
+          }
+        }}
+      >
         <PopoverTrigger asChild>
-          <Button variant={"outline"} className="space-x-2 font-normal" disabled={isLoading}>
+          <Button
+            variant={"outline"}
+            className="space-x-2 font-normal"
+            disabled={isLoading}
+          >
             {isLoading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (

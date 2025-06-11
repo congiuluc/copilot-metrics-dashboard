@@ -12,7 +12,10 @@ import { proxy, useSnapshot } from "valtio";
 
 import { groupByTimeFrame } from "@/utils/data-mapper";
 import { CopilotSeatsData } from "../common/models";
-import { refreshMetricsData, refreshSeatsData } from "@/services/dashboard-actions";
+import {
+  refreshMetricsData,
+  refreshSeatsData,
+} from "@/services/dashboard-actions";
 
 interface IProps extends PropsWithChildren {
   copilotUsages: CopilotUsageOutput[];
@@ -53,6 +56,7 @@ class DashboardState {
     enterprise?: string;
     organization?: string;
   } = {};
+
   public get filteredSeatsData(): CopilotSeatsData {
     // Return the server-filtered seats data directly
     // The filtering is now done on the server side when team filters are applied
@@ -122,7 +126,9 @@ class DashboardState {
       // Reset pending changes flag
       this.hasPendingTeamChanges = false;
     }
-  }  private async refreshDataWithTeams(selectedTeams: string[]): Promise<void> {
+  }
+
+  private async refreshDataWithTeams(selectedTeams: string[]): Promise<void> {
     this.isLoading = true;
 
     try {
@@ -137,7 +143,7 @@ class DashboardState {
           enterprise: this.currentFilter.enterprise,
           organization: this.currentFilter.organization,
           teams: selectedTeams,
-        })
+        }),
       ]);
 
       if (metricsResult.success && metricsResult.data) {
@@ -182,6 +188,7 @@ class DashboardState {
     this.hideWeekends = hide;
     this.applyFilters();
   }
+
   public async resetAllFilters(): Promise<void> {
     this.languages.forEach((item) => (item.isSelected = false));
     this.editors.forEach((item) => (item.isSelected = false));
@@ -245,6 +252,7 @@ class DashboardState {
 
     return languages.sort((a, b) => a.value.localeCompare(b.value));
   }
+  
   private extractUniqueEditors(): DropdownFilterItem[] {
     const editors: DropdownFilterItem[] = [];
     this.apiData.forEach((item) => {

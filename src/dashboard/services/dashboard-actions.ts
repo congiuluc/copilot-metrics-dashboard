@@ -16,26 +16,26 @@ export async function refreshMetricsData(filter: {
       endDate: filter.endDate,
       enterprise: filter.enterprise || "",
       organization: filter.organization || "",
-      team: filter.teams || []
+      team: filter.teams || [],
     };
 
     const metrics = await getCopilotMetrics(metricsFilter);
-    
+
     if (metrics.status !== "OK") {
       return {
         success: false,
-        error: metrics.errors[0]?.message || "Failed to fetch metrics"
+        error: metrics.errors[0]?.message || "Failed to fetch metrics",
       };
     }
 
     return {
       success: true,
-      data: metrics.response
+      data: metrics.response,
     };
   } catch (error) {
     return {
       success: false,
-      error: "An unexpected error occurred"
+      error: "An unexpected error occurred",
     };
   }
 }
@@ -51,27 +51,27 @@ export async function refreshSeatsData(filter: {
       date: filter.date,
       enterprise: filter.enterprise || "",
       organization: filter.organization || "",
-      team: filter.teams || [],  
-      page: 1
+      team: filter.teams || [],
+      page: 1,
     };
 
     const seats = await getCopilotSeatsManagement(seatsFilter);
-    
+
     if (seats.status !== "OK") {
       return {
         success: false,
-        error: seats.errors[0]?.message || "Failed to fetch seats data"
+        error: seats.errors[0]?.message || "Failed to fetch seats data",
       };
     }
 
     return {
       success: true,
-      data: seats.response
+      data: seats.response,
     };
   } catch (error) {
     return {
       success: false,
-      error: "An unexpected error occurred"
+      error: "An unexpected error occurred",
     };
   }
 }

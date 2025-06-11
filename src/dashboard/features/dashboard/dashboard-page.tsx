@@ -25,13 +25,21 @@ export default async function Dashboard(props: IProps) {
   // Initialize with empty team array (no URL parsing)
   const metricsFilter = {
     ...props.searchParams,
-    team: []  // Start with no team filtering
+    team: [], // Start with no team filtering
   };
-  
+
   const metricsPromise = getCopilotMetrics(metricsFilter);
-  const seatsPromise = getCopilotSeatsManagement({ date: props.searchParams.endDate} as SeatServiceFilter);
-  const teamsPromise = getAllCopilotSeatsTeams({ date: props.searchParams.endDate} as SeatServiceFilter);
-  const [metrics, seats, teams] = await Promise.all([metricsPromise, seatsPromise, teamsPromise]);
+  const seatsPromise = getCopilotSeatsManagement({
+    date: props.searchParams.endDate,
+  } as SeatServiceFilter);
+  const teamsPromise = getAllCopilotSeatsTeams({
+    date: props.searchParams.endDate,
+  } as SeatServiceFilter);
+  const [metrics, seats, teams] = await Promise.all([
+    metricsPromise,
+    seatsPromise,
+    teamsPromise,
+  ]);
   const isCosmosDb = cosmosConfiguration();
 
   if (metrics.status !== "OK") {
@@ -58,7 +66,7 @@ export default async function Dashboard(props: IProps) {
       }}
     >
       <main className="flex flex-1 flex-col gap-4 md:gap-8 pb-8">
-        <Header isCosmosDb={isCosmosDb}/>
+        <Header isCosmosDb={isCosmosDb} />
         <div className="mx-auto w-full max-w-6xl container">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Stats />

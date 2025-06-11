@@ -52,7 +52,11 @@ export const Overview = () => {
   let total_seats = 0;
   let total_active_seats = 0;
 
-  if (filteredSeatsData && typeof filteredSeatsData.total_seats === "number" && typeof filteredSeatsData.total_active_seats === "number") {
+  if (
+    filteredSeatsData &&
+    typeof filteredSeatsData.total_seats === "number" &&
+    typeof filteredSeatsData.total_active_seats === "number"
+  ) {
     total_seats = filteredSeatsData.total_seats;
     total_active_seats = filteredSeatsData.total_active_seats;
   }
@@ -62,21 +66,29 @@ export const Overview = () => {
       <ChartHeader
         title={"Seat information"}
         description={"Overview of GitHub Copilot seats"}
-        tip={"The active seats are the seats where last activity is within the last 30 days. The inactive seats are the seats where last activity is null or older than 30 days."}
+        tip={
+          "The active seats are the seats where last activity is within the last 30 days. The inactive seats are the seats where last activity is null or older than 30 days."
+        }
       />
       <CardContent className=" flex flex-col gap-2">
         {isLoading ? (
           <>
             <div className="flex-1 flex flex-row gap-2">
-              <div className="text-xs flex-1 text-muted-foreground">Total seats</div>
+              <div className="text-xs flex-1 text-muted-foreground">
+                Total seats
+              </div>
               <div className="text-xs">...</div>
             </div>
             <div className="flex-1 flex flex-row gap-2">
-              <div className="text-xs flex-1 text-muted-foreground">Active seats</div>
+              <div className="text-xs flex-1 text-muted-foreground">
+                Active seats
+              </div>
               <div className="text-xs">...</div>
             </div>
             <div className="flex-1 flex flex-row gap-2">
-              <div className="text-xs flex-1 text-muted-foreground">Inactive seats</div>
+              <div className="text-xs flex-1 text-muted-foreground">
+                Inactive seats
+              </div>
               <div className="text-xs">...</div>
             </div>
           </>
@@ -84,7 +96,10 @@ export const Overview = () => {
           <>
             <Item label="Total seats" value={total_seats} />
             <Item label="Active seats" value={total_active_seats} />
-            <Item label="Inactive seats" value={total_seats - total_active_seats} />
+            <Item
+              label="Inactive seats"
+              value={total_seats - total_active_seats}
+            />
           </>
         )}
       </CardContent>

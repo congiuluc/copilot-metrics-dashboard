@@ -12,8 +12,6 @@ public class CopilotMetricsIngestion
     private readonly ILogger _logger;
     private readonly GitHubCopilotMetricsClient _metricsClient;
     private readonly GitHubCopilotSeatsClient _seatsClient;
-
-    
     private readonly IOptions<GithubMetricsApiOptions> _options;
 
     public CopilotMetricsIngestion(
@@ -27,7 +25,6 @@ public class CopilotMetricsIngestion
         _seatsClient = seatsClient;
         _options = options;
     }
-
 
     [Function("GitHubCopilotMetricsIngestion")]
     [CosmosDBOutput(databaseName: "platform-engineering", containerName: "metrics_history", Connection = "AZURE_COSMOSDB_ENDPOINT", CreateIfNotExists = true)]
