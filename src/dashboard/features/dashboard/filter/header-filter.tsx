@@ -21,11 +21,12 @@ export function Filters() {
         name={"Editor"}
         allItems={allEditors}
         onSelect={(e) => dashboardStore.filterEditor(e)}
-      />
+      />{" "}
       <DropdownFilter
         name={"Team"}
         allItems={allTeams}
         onSelect={(e) => dashboardStore.filterTeam(e)}
+        onClose={() => dashboardStore.refreshTeamDataIfNeeded()}
       />
       <Button
         variant={"secondary"}

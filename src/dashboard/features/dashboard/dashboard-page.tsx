@@ -16,11 +16,19 @@ import { getCopilotSeatsManagement, getAllCopilotSeatsTeams, IFilter as SeatServ
 import { cosmosConfiguration } from "@/services/cosmos-db-service";
 
 export interface IProps {
-  searchParams: MetricsFilter;
+  searchParams: MetricsFilter & {
+    teams?: string;
+  };
 }
 
 export default async function Dashboard(props: IProps) {
-  const metricsPromise = getCopilotMetrics(props.searchParams);
+  // Initialize with empty team array (no URL parsing)
+  const metricsFilter = {
+    ...props.searchParams,
+    team: []  // Start with no team filtering
+  };
+  
+  const metricsPromise = getCopilotMetrics(metricsFilter);
   const seatsPromise = getCopilotSeatsManagement({ date: props.searchParams.endDate} as SeatServiceFilter);
   const teamsPromise = getAllCopilotSeatsTeams({ date: props.searchParams.endDate} as SeatServiceFilter);
   const [metrics, seats, teams] = await Promise.all([metricsPromise, seatsPromise, teamsPromise]);
@@ -37,12 +45,17 @@ export default async function Dashboard(props: IProps) {
   if (teams.status !== "OK") {
     return <ErrorPage error={teams.errors[0].message} />;
   }
-
   return (
     <DataProvider
       copilotUsages={metrics.response}
       seatsData={seats.response}
       teamsData={teams.response}
+      filter={{
+        startDate: props.searchParams.startDate,
+        endDate: props.searchParams.endDate,
+        enterprise: props.searchParams.enterprise,
+        organization: props.searchParams.organization,
+      }}
     >
       <main className="flex flex-1 flex-col gap-4 md:gap-8 pb-8">
         <Header isCosmosDb={isCosmosDb}/>

@@ -12,11 +12,18 @@ import { proxy, useSnapshot } from "valtio";
 
 import { groupByTimeFrame } from "@/utils/data-mapper";
 import { CopilotSeatsData } from "../common/models";
+import { refreshMetricsData, refreshSeatsData } from "@/services/dashboard-actions";
 
 interface IProps extends PropsWithChildren {
   copilotUsages: CopilotUsageOutput[];
   seatsData: CopilotSeatsData;
   teamsData: GitHubTeam[];
+  filter?: {
+    startDate?: Date;
+    endDate?: Date;
+    enterprise?: string;
+    organization?: string;
+  };
 }
 
 export interface DropdownFilterItem {
@@ -33,11 +40,19 @@ class DashboardState {
   public teams: DropdownFilterItem[] = [];
   public timeFrame: TimeFrame = "weekly";
   public hideWeekends: boolean = false;
+  public isLoading: boolean = false;
 
   public seatsData: CopilotSeatsData = {} as CopilotSeatsData;
   public teamsData: GitHubTeam[] = [];
 
   private apiData: CopilotUsageOutput[] = [];
+  private hasPendingTeamChanges: boolean = false;  // Track if teams have changed
+  private currentFilter: {
+    startDate?: Date;
+    endDate?: Date;
+    enterprise?: string;
+    organization?: string;
+  } = {};
 
   // Computed property for filtered seats data based on selected teams
   public get filteredSeatsData(): CopilotSeatsData {
@@ -71,11 +86,16 @@ class DashboardState {
       total_active_seats: activeSeats,
       seats: filteredSeats,
     } as CopilotSeatsData;
-  }
-  public initData(
+  }  public initData(
     data: CopilotUsageOutput[],
     seatsData: CopilotSeatsData,
-    teamsData: GitHubTeam[]
+    teamsData: GitHubTeam[],
+    filter?: {
+      startDate?: Date;
+      endDate?: Date;
+      enterprise?: string;
+      organization?: string;
+    }
   ): void {
     this.apiData = [...data];
     this.filteredData = [...data];
@@ -85,6 +105,10 @@ class DashboardState {
     this.teams = this.extractUniqueTeams();
     this.seatsData = seatsData;
     this.teamsData = teamsData;
+      // Store current filter for data refreshing
+    if (filter) {
+      this.currentFilter = filter;
+    }
   }
 
   public filterLanguage(language: string): void {
@@ -100,26 +124,82 @@ class DashboardState {
       item.isSelected = !item.isSelected;
       this.applyFilters();
     }
-  }
-
-  public filterTeam(team: string): void {
+  }  public filterTeam(team: string): void {
     const item = this.teams.find((t) => t.value === team);
     if (item) {
       item.isSelected = !item.isSelected;
+      
+      // Apply filters immediately for instant UI feedback
       this.applyFilters();
+      
+      // Mark that we have pending team changes (don't refresh data yet)
+      this.hasPendingTeamChanges = true;
+    }
+  }
+
+  public async refreshTeamDataIfNeeded(): Promise<void> {
+    if (this.hasPendingTeamChanges) {
+      // Get selected teams for server request
+      const selectedTeams = this.teams.filter((t) => t.isSelected).map((t) => t.value);
+      
+      // Refresh data from server in the background
+      await this.refreshDataWithTeams(selectedTeams);
+      
+      // Reset pending changes flag
+      this.hasPendingTeamChanges = false;
+    }
+  }
+
+  private async refreshDataWithTeams(selectedTeams: string[]): Promise<void> {
+    this.isLoading = true;
+    
+    try {
+      const result = await refreshMetricsData({
+        ...this.currentFilter,
+        teams: selectedTeams
+      });
+      
+      if (result.success && result.data) {
+        // Update the data and re-extract unique values
+        this.apiData = [...result.data];
+        this.languages = this.extractUniqueLanguages();
+        this.editors = this.extractUniqueEditors();
+        
+        // Preserve team selections and reapply all filters
+        const currentTeamSelections = this.teams.map(t => ({ value: t.value, isSelected: t.isSelected }));
+        this.teams = this.extractUniqueTeams();
+        
+        // Restore team selections
+        this.teams.forEach(team => {
+          const previousSelection = currentTeamSelections.find(t => t.value === team.value);
+          if (previousSelection) {
+            team.isSelected = previousSelection.isSelected;
+          }
+        });
+        
+        this.applyFilters();
+      }
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+      // Could add error handling UI here
+    } finally {
+      this.isLoading = false;
     }
   }
 
   public toggleWeekendFilter(hide: boolean): void {
     this.hideWeekends = hide;
     this.applyFilters();
-  }
-  public resetAllFilters(): void {
+  }  public async resetAllFilters(): Promise<void> {
     this.languages.forEach((item) => (item.isSelected = false));
     this.editors.forEach((item) => (item.isSelected = false));
     this.teams.forEach((item) => (item.isSelected = false));
     this.hideWeekends = false;
+    this.hasPendingTeamChanges = false;  // Reset pending changes
     this.applyFilters();
+    
+    // Refresh data from server (no URL changes)
+    await this.refreshDataWithTeams([]);
   }
 
   public onTimeFrameChange(timeFrame: TimeFrame): void {
@@ -258,7 +338,8 @@ export const DataProvider = ({
   copilotUsages,
   seatsData,
   teamsData,
+  filter,
 }: IProps) => {
-  dashboardStore.initData(copilotUsages, seatsData, teamsData);
+  dashboardStore.initData(copilotUsages, seatsData, teamsData, filter);
   return <>{children}</>;
 };

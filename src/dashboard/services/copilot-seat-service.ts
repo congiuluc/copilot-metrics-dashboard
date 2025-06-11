@@ -14,7 +14,7 @@ export interface IFilter {
   date?: Date;
   enterprise: string;
   organization: string;
-  team: string;
+  team: string[];
   page: number;
 }
 
@@ -87,10 +87,17 @@ const getDataFromDatabase = async (
         name: "@organization",
         value: filter.organization,
       });
-    }
-    if (filter.team) {
-      querySpec.query += ` AND c.team = @team`;
-      querySpec.parameters?.push({ name: "@team", value: filter.team });
+    }    if (filter.team && filter.team.length > 0) {
+      if (filter.team.length === 1) {
+        querySpec.query += ` AND c.team = @team`;
+        querySpec.parameters?.push({ name: "@team", value: filter.team[0] });
+      } else {
+        const teamConditions = filter.team.map((_, index) => `c.team = @team${index}`).join(' OR ');
+        querySpec.query += ` AND (${teamConditions})`;
+        filter.team.forEach((team, index) => {
+          querySpec.parameters?.push({ name: `@team${index}`, value: team });
+        });
+      }
     }
     if (filter.page) {
       querySpec.query += ` AND c.page = @page`;

@@ -19,7 +19,7 @@ export interface IFilter {
   endDate?: Date;
   enterprise: string;
   organization: string;
-  team: string;
+  team: string[];
 }
 
 export const getCopilotMetrics = async (
@@ -166,10 +166,17 @@ export const getCopilotMetricsFromDatabase = async (
       value: filter.organization,
     });
   }
-  
-  if (filter.team) {
-    querySpec.query += ` AND c.team = @team`;
-    querySpec.parameters?.push({ name: "@team", value: filter.team });
+    if (filter.team && filter.team.length > 0) {
+    if (filter.team.length === 1) {
+      querySpec.query += ` AND c.team = @team`;
+      querySpec.parameters?.push({ name: "@team", value: filter.team[0] });
+    } else {
+      const teamConditions = filter.team.map((_, index) => `c.team = @team${index}`).join(' OR ');
+      querySpec.query += ` AND (${teamConditions})`;
+      filter.team.forEach((team, index) => {
+        querySpec.parameters?.push({ name: `@team${index}`, value: team });
+      });
+    }
   }
 
   const { resources } = await container.items

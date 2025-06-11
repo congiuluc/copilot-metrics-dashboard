@@ -51,12 +51,11 @@ export const TeamsFilter = ({ disabled = false }: TeamsFilterProps) => {
     try {
       const params = new URLSearchParams(window.location.search);
       const date = params.get('date') ? new Date(params.get('date')!) : undefined;
-      
-      const filter: IFilter = {
+        const filter: IFilter = {
         date,
         enterprise: '',
         organization: '',
-        team: '',
+        team: [],
         page: 1
       };
 
