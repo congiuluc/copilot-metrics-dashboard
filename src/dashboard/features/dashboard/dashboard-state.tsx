@@ -77,11 +77,11 @@ class DashboardState {
     this.apiData = [...data];
     this.filteredData = [...data];
     this.onTimeFrameChange(this.timeFrame);
+    this.seatsData = seatsData;
+    this.teamsData = teamsData;
     this.languages = this.extractUniqueLanguages();
     this.editors = this.extractUniqueEditors();
     this.teams = this.extractUniqueTeams();
-    this.seatsData = seatsData;
-    this.teamsData = teamsData;
     // Store current filter for data refreshing
     if (filter) {
       this.currentFilter = filter;

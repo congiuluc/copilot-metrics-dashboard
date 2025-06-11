@@ -6,9 +6,7 @@ import { dashboardStore, useDashboard } from "../dashboard-state";
 import { DropdownFilter } from "./dropdown-filter";
 
 export function Filters() {
-  const { editors: allEditors } = useDashboard();
-  const { languages: allLanguages } = useDashboard();
-  const { teams: allTeams } = useDashboard();
+  const { editors: allEditors, languages: allLanguages, teams: allTeams, isLoading } = useDashboard();
 
   return (
     <div className="flex gap-2 flex-1">

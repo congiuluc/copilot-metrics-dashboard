@@ -570,7 +570,7 @@ const getAllCopilotSeatsTeamsFromDatabase = async (
     }
 
     let querySpec: SqlQuerySpec = {
-      query: `SELECT DISTINCT VALUE seat.assigning_team FROM c JOIN seat IN c.seats WHERE  IS_DEFINED(seat.assigning_team) AND seat.assigning_team != null AND  c.date = @date`,
+      query: `SELECT DISTINCT VALUE seat.assigning_team FROM c JOIN seat IN c.seats WHERE IS_DEFINED(seat.assigning_team) AND seat.assigning_team != null AND c.date = @date`,
       parameters: [{ name: "@date", value: date }],
     };
     if (filter.enterprise) {
