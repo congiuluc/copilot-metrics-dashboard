@@ -616,7 +616,7 @@ const getAllCopilotSeatsTeamsFromApi = async (
     if (filter.enterprise) {
       url = `https://api.github.com/enterprises/${filter.enterprise}/copilot/billing/seats?per_page=100`;
     } else {
-      url = `https://api.github.com/enterprises/${filter.organization}/copilot/billing/seats?per_page=100`;
+      url = `https://api.github.com/orgs/${filter.organization}/copilot/billing/seats?per_page=100`;
     }
     let teams: GitHubTeam[] = [];
     let nextUrl = url;
