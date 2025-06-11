@@ -10,10 +10,10 @@ import {
 import StatsCard from "./stats-card";
 
 export const Stats = () => {
-  const { seatsData, filteredData } = useDashboard();
+  const { filteredSeatsData, filteredData } = useDashboard();
   const acceptanceAverage = computeCumulativeAcceptanceAverage(filteredData);
   const averageActiveUsers = computeActiveUserAverage(filteredData);
-  const adoptionRate = computeAdoptionRate(seatsData);
+  const adoptionRate = computeAdoptionRate(filteredSeatsData);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 col-span-4">
@@ -48,13 +48,13 @@ export const Overview = () => {
     </div>
   );
 
-  const { seatsData } = useDashboard();
+  const { filteredSeatsData } = useDashboard();
   let total_seats = 0;
   let total_active_seats = 0;
 
-  if (seatsData && typeof seatsData.total_seats === "number" && typeof seatsData.total_active_seats === "number") {
-    total_seats = seatsData.total_seats;
-    total_active_seats = seatsData.total_active_seats;
+  if (filteredSeatsData && typeof filteredSeatsData.total_seats === "number" && typeof filteredSeatsData.total_active_seats === "number") {
+    total_seats = filteredSeatsData.total_seats;
+    total_active_seats = filteredSeatsData.total_active_seats;
   }
 
   return (

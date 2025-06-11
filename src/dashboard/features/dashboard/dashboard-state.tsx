@@ -1,7 +1,11 @@
 "use client";
 
 import { PropsWithChildren } from "react";
-import { Breakdown, CopilotUsageOutput, GitHubTeam } from "@/features/common/models";
+import {
+  Breakdown,
+  CopilotUsageOutput,
+  GitHubTeam,
+} from "@/features/common/models";
 import { formatDate } from "@/utils/helpers";
 
 import { proxy, useSnapshot } from "valtio";
@@ -34,6 +38,40 @@ class DashboardState {
   public teamsData: GitHubTeam[] = [];
 
   private apiData: CopilotUsageOutput[] = [];
+
+  // Computed property for filtered seats data based on selected teams
+  public get filteredSeatsData(): CopilotSeatsData {
+    const selectedTeams = this.teams.filter((item) => item.isSelected);
+
+    if (selectedTeams.length === 0) {
+      return this.seatsData;
+    }
+
+    const selectedTeamNames = selectedTeams.map((team) => team.value);
+    const filteredSeats =
+      this.seatsData.seats?.filter(
+        (seat) =>
+          seat.assigning_team?.name &&
+          selectedTeamNames.includes(seat.assigning_team.name)
+      ) || [];
+
+    // Calculate filtered stats
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const activeSeats = filteredSeats.filter((seat) => {
+      if (!seat.last_activity_at) return false;
+      const lastActivityDate = new Date(seat.last_activity_at);
+      return lastActivityDate >= thirtyDaysAgo;
+    }).length;
+
+    return {
+      ...this.seatsData,
+      total_seats: filteredSeats.length,
+      total_active_seats: activeSeats,
+      seats: filteredSeats,
+    } as CopilotSeatsData;
+  }
   public initData(
     data: CopilotUsageOutput[],
     seatsData: CopilotSeatsData,
@@ -93,7 +131,6 @@ class DashboardState {
 
     const selectedLanguages = this.languages.filter((item) => item.isSelected);
     const selectedEditors = this.editors.filter((item) => item.isSelected);
-    const selectedTeams = this.teams.filter((item) => item.isSelected);
 
     if (selectedLanguages.length !== 0) {
       data.forEach((item) => {
@@ -153,14 +190,14 @@ class DashboardState {
   }
   private extractUniqueTeams(): DropdownFilterItem[] {
     const teams: DropdownFilterItem[] = [];
-    
+
     // Use the fetched teams data instead of extracting from seats
     if (this.teamsData && this.teamsData.length > 0) {
       this.teamsData.forEach((team) => {
         if (team && team.name) {
           const teamName = team.name;
           const index = teams.findIndex((t) => t.value === teamName);
-          
+
           if (index === -1) {
             teams.push({ value: teamName, isSelected: false });
           }
@@ -172,10 +209,12 @@ class DashboardState {
   }
 
   private aggregatedDataByTimeFrame(hideWeekends: boolean) {
-    let items = JSON.parse(JSON.stringify(this.apiData)) as CopilotUsageOutput[];
-    
+    let items = JSON.parse(
+      JSON.stringify(this.apiData)
+    ) as CopilotUsageOutput[];
+
     if (hideWeekends) {
-      items = items.filter(item => {
+      items = items.filter((item) => {
         const date = new Date(item.day);
         const day = date.getDay();
         return day !== 0 && day !== 6; // 0 is Sunday, 6 is Saturday
