@@ -4,7 +4,7 @@ import {
 } from "@/features/common/response-error";
 import { ServerActionResponse } from "@/features/common/server-action-response";
 import { ensureGitHubEnvConfig } from "./env-service";
-import { CopilotSeatsData, SeatAssignment } from "@/features/common/models";
+import { CopilotSeatsData, SeatAssignment, GitHubTeam } from "@/features/common/models";
 import { cosmosClient, cosmosConfiguration } from "./cosmos-db-service";
 import { format } from "date-fns";
 import { SqlQuerySpec } from "@azure/cosmos";
@@ -436,3 +436,162 @@ const aggregateSeatsData = (data: CopilotSeatsData[]): CopilotSeatsData => {
 
   return aggregatedData;
 }
+
+
+
+export const getAllCopilotSeatsTeams = async (
+  filter: IFilter
+): Promise<ServerActionResponse<GitHubTeam[]>> => {
+  const env = ensureGitHubEnvConfig();
+  const isCosmosConfig = cosmosConfiguration();
+
+  if (env.status !== "OK") {
+    return env;
+  }
+
+  const { enterprise, organization } = env.response;
+
+  try {
+    switch (process.env.GITHUB_API_SCOPE) {
+      case "enterprise":
+        if (stringIsNullOrEmpty(filter.enterprise)) {
+          filter.enterprise = enterprise;
+        }
+        break;
+      default:
+        if (stringIsNullOrEmpty(filter.organization)) {
+          filter.organization = organization;
+        }
+        break;
+    }
+    if (isCosmosConfig) {
+      const dbResult = await getAllCopilotSeatsTeamsFromDatabase(filter);
+      if (dbResult.status !== "OK" || !dbResult.response) {
+        return {
+          status: "ERROR",
+          errors: [{ message: "No data found" }]
+        };
+      }
+      return {
+        status: "OK",
+        response: dbResult.response
+      };
+    }
+    const apiResult = await getAllCopilotSeatsTeamsFromApi(filter);
+    if (apiResult.status !== "OK" || !apiResult.response) {
+      return {
+        status: "ERROR",
+        errors: [{ message: "No data found" }]
+      };
+    }
+    return {
+      status: "OK",
+      response: apiResult.response
+    };
+  } catch (e) {
+    return unknownResponseError(e);
+  }
+};
+
+const getAllCopilotSeatsTeamsFromDatabase = async (
+  filter: IFilter
+): Promise<ServerActionResponse<GitHubTeam[]>> => {
+  try {
+    const client = cosmosClient();
+    const database = client.database("platform-engineering");
+    const container = database.container("seats_history");
+
+    let date = "";
+    if (filter.date) {
+      date = format(filter.date, "yyyy-MM-dd");
+    } else {
+      const today = Date.now();
+      date = format(today, "yyyy-MM-dd");
+    }
+
+    let querySpec: SqlQuerySpec = {
+      query: `SELECT DISTINCT VALUE seat.assigning_team FROM c JOIN seat IN c.seats WHERE  IS_DEFINED(seat.assigning_team) AND seat.assigning_team != null AND  c.date = @date`,
+      parameters: [{ name: "@date", value: date }],
+    };
+    if (filter.enterprise) {
+      querySpec.query += ` AND c.enterprise = @enterprise`;
+      querySpec.parameters?.push({
+        name: "@enterprise",
+        value: filter.enterprise,
+      });
+    }
+    if (filter.organization) {
+      querySpec.query += ` AND c.organization = @organization`;
+      querySpec.parameters?.push({
+        name: "@organization",
+        value: filter.organization,
+      });
+    }    
+    const { resources } = await container.items.query<any>(querySpec).fetchAll();
+    const teams = resources.sort((a: GitHubTeam, b: GitHubTeam) => 
+      (a.name || '').localeCompare(b.name || '')
+    );
+
+
+    return {
+      status: "OK",
+      response: teams,
+    };
+  } catch (e) {
+    return unknownResponseError(e);
+  }
+};
+
+const getAllCopilotSeatsTeamsFromApi = async (
+  filter: IFilter
+): Promise<ServerActionResponse<GitHubTeam[]>> => {
+  const env = ensureGitHubEnvConfig();
+  if (env.status !== "OK") {
+    return env;
+  }
+  let { token, version } = env.response;
+  try {
+    let url = "";
+    if (filter.enterprise) {
+      url = `https://api.github.com/enterprises/${filter.enterprise}/copilot/billing/seats?per_page=100`;
+    } else {
+      url = `https://api.github.com/enterprises/${filter.organization}/copilot/billing/seats?per_page=100`;
+    }    let teams: GitHubTeam[] = [];
+    let nextUrl = url;
+    do {
+      const response = await fetch(nextUrl, {
+        cache: "no-store",
+        headers: {
+          Accept: `application/vnd.github+json`,
+          Authorization: `Bearer ${token}`,
+          "X-GitHub-Api-Version": version,
+        },
+      });
+      if (!response.ok) {
+        return formatResponseError(filter.enterprise || filter.organization, response);
+      }
+      const data = await response.json();
+      if (data.seats && Array.isArray(data.seats)) {
+        const pageTeams = data.seats
+          .map((seat: any) => seat.assigning_team)
+          .filter((team: any) => !!team);
+        teams.push(...pageTeams);
+      }
+      const linkHeader = response.headers.get("Link");
+      nextUrl = getNextUrlFromLinkHeader(linkHeader) || "";
+    } while (nextUrl);
+    
+    // Remove duplicates based on team id or name
+    const uniqueTeams = teams.filter((team, index, self) => 
+      index === self.findIndex(t => (t.id ? t.id === team.id : t.name === team.name))
+    );
+    
+    return {
+      status: "OK",
+      response: uniqueTeams,
+    };
+  } catch (e) {
+    return unknownResponseError(e);
+  }
+};
+

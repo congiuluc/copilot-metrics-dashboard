@@ -1,7 +1,7 @@
 "use client";
 
 import { PropsWithChildren } from "react";
-import { Breakdown, CopilotUsageOutput } from "@/features/common/models";
+import { Breakdown, CopilotUsageOutput, GitHubTeam } from "@/features/common/models";
 import { formatDate } from "@/utils/helpers";
 
 import { proxy, useSnapshot } from "valtio";
@@ -12,6 +12,7 @@ import { CopilotSeatsData } from "../common/models";
 interface IProps extends PropsWithChildren {
   copilotUsages: CopilotUsageOutput[];
   seatsData: CopilotSeatsData;
+  teamsData: GitHubTeam[];
 }
 
 export interface DropdownFilterItem {
@@ -30,11 +31,13 @@ class DashboardState {
   public hideWeekends: boolean = false;
 
   public seatsData: CopilotSeatsData = {} as CopilotSeatsData;
+  public teamsData: GitHubTeam[] = [];
 
   private apiData: CopilotUsageOutput[] = [];
   public initData(
     data: CopilotUsageOutput[],
-    seatsData: CopilotSeatsData
+    seatsData: CopilotSeatsData,
+    teamsData: GitHubTeam[]
   ): void {
     this.apiData = [...data];
     this.filteredData = [...data];
@@ -43,6 +46,7 @@ class DashboardState {
     this.editors = this.extractUniqueEditors();
     this.teams = this.extractUniqueTeams();
     this.seatsData = seatsData;
+    this.teamsData = teamsData;
   }
 
   public filterLanguage(language: string): void {
@@ -147,16 +151,15 @@ class DashboardState {
 
     return editors.sort((a, b) => a.value.localeCompare(b.value));
   }
-
   private extractUniqueTeams(): DropdownFilterItem[] {
     const teams: DropdownFilterItem[] = [];
     
-    // Extract teams from seats data
-    if (this.seatsData && this.seatsData.seats) {
-      this.seatsData.seats.forEach((seat) => {
-        if (seat.assigning_team && seat.assigning_team.name) {
-          const teamName = seat.assigning_team.name;
-          const index = teams.findIndex((team) => team.value === teamName);
+    // Use the fetched teams data instead of extracting from seats
+    if (this.teamsData && this.teamsData.length > 0) {
+      this.teamsData.forEach((team) => {
+        if (team && team.name) {
+          const teamName = team.name;
+          const index = teams.findIndex((t) => t.value === teamName);
           
           if (index === -1) {
             teams.push({ value: teamName, isSelected: false });
@@ -215,7 +218,8 @@ export const DataProvider = ({
   children,
   copilotUsages,
   seatsData,
+  teamsData,
 }: IProps) => {
-  dashboardStore.initData(copilotUsages, seatsData);
+  dashboardStore.initData(copilotUsages, seatsData, teamsData);
   return <>{children}</>;
 };
