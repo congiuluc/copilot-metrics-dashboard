@@ -46,47 +46,20 @@ class DashboardState {
   public teamsData: GitHubTeam[] = [];
 
   private apiData: CopilotUsageOutput[] = [];
-  private hasPendingTeamChanges: boolean = false;  // Track if teams have changed
+  private hasPendingTeamChanges: boolean = false; // Track if teams have changed
   private currentFilter: {
     startDate?: Date;
     endDate?: Date;
     enterprise?: string;
     organization?: string;
   } = {};
-
-  // Computed property for filtered seats data based on selected teams
   public get filteredSeatsData(): CopilotSeatsData {
-    const selectedTeams = this.teams.filter((item) => item.isSelected);
+    // Return the server-filtered seats data directly
+    // The filtering is now done on the server side when team filters are applied
+    return this.seatsData;
+  }
 
-    if (selectedTeams.length === 0) {
-      return this.seatsData;
-    }
-
-    const selectedTeamNames = selectedTeams.map((team) => team.value);
-    const filteredSeats =
-      this.seatsData.seats?.filter(
-        (seat) =>
-          seat.assigning_team?.name &&
-          selectedTeamNames.includes(seat.assigning_team.name)
-      ) || [];
-
-    // Calculate filtered stats
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const activeSeats = filteredSeats.filter((seat) => {
-      if (!seat.last_activity_at) return false;
-      const lastActivityDate = new Date(seat.last_activity_at);
-      return lastActivityDate >= thirtyDaysAgo;
-    }).length;
-
-    return {
-      ...this.seatsData,
-      total_seats: filteredSeats.length,
-      total_active_seats: activeSeats,
-      seats: filteredSeats,
-    } as CopilotSeatsData;
-  }  public initData(
+  public initData(
     data: CopilotUsageOutput[],
     seatsData: CopilotSeatsData,
     teamsData: GitHubTeam[],
@@ -105,7 +78,7 @@ class DashboardState {
     this.teams = this.extractUniqueTeams();
     this.seatsData = seatsData;
     this.teamsData = teamsData;
-      // Store current filter for data refreshing
+    // Store current filter for data refreshing
     if (filter) {
       this.currentFilter = filter;
     }
@@ -118,21 +91,20 @@ class DashboardState {
       this.applyFilters();
     }
   }
+
   public filterEditor(editor: string): void {
     const item = this.editors.find((l) => l.value === editor);
     if (item) {
       item.isSelected = !item.isSelected;
       this.applyFilters();
     }
-  }  public filterTeam(team: string): void {
+  }
+
+  public filterTeam(team: string): void {
     const item = this.teams.find((t) => t.value === team);
     if (item) {
       item.isSelected = !item.isSelected;
-      
-      // Apply filters immediately for instant UI feedback
       this.applyFilters();
-      
-      // Mark that we have pending team changes (don't refresh data yet)
       this.hasPendingTeamChanges = true;
     }
   }
@@ -140,47 +112,66 @@ class DashboardState {
   public async refreshTeamDataIfNeeded(): Promise<void> {
     if (this.hasPendingTeamChanges) {
       // Get selected teams for server request
-      const selectedTeams = this.teams.filter((t) => t.isSelected).map((t) => t.value);
-      
+      const selectedTeams = this.teams
+        .filter((t) => t.isSelected)
+        .map((t) => t.value);
+
       // Refresh data from server in the background
       await this.refreshDataWithTeams(selectedTeams);
-      
+
       // Reset pending changes flag
       this.hasPendingTeamChanges = false;
     }
-  }
-
-  private async refreshDataWithTeams(selectedTeams: string[]): Promise<void> {
+  }  private async refreshDataWithTeams(selectedTeams: string[]): Promise<void> {
     this.isLoading = true;
-    
+
     try {
-      const result = await refreshMetricsData({
-        ...this.currentFilter,
-        teams: selectedTeams
-      });
-      
-      if (result.success && result.data) {
-        // Update the data and re-extract unique values
-        this.apiData = [...result.data];
+      // Refresh both metrics data and seats data in parallel
+      const [metricsResult, seatsResult] = await Promise.all([
+        refreshMetricsData({
+          ...this.currentFilter,
+          teams: selectedTeams,
+        }),
+        refreshSeatsData({
+          date: this.currentFilter.endDate, // Use endDate for seats filtering
+          enterprise: this.currentFilter.enterprise,
+          organization: this.currentFilter.organization,
+          teams: selectedTeams,
+        })
+      ]);
+
+      if (metricsResult.success && metricsResult.data) {
+        // Update the metrics data and re-extract unique values
+        this.apiData = [...metricsResult.data];
         this.languages = this.extractUniqueLanguages();
         this.editors = this.extractUniqueEditors();
-        
+
         // Preserve team selections and reapply all filters
-        const currentTeamSelections = this.teams.map(t => ({ value: t.value, isSelected: t.isSelected }));
+        const currentTeamSelections = this.teams.map((t) => ({
+          value: t.value,
+          isSelected: t.isSelected,
+        }));
         this.teams = this.extractUniqueTeams();
-        
+
         // Restore team selections
-        this.teams.forEach(team => {
-          const previousSelection = currentTeamSelections.find(t => t.value === team.value);
+        this.teams.forEach((team) => {
+          const previousSelection = currentTeamSelections.find(
+            (t) => t.value === team.value
+          );
           if (previousSelection) {
             team.isSelected = previousSelection.isSelected;
           }
         });
-        
+
         this.applyFilters();
       }
+
+      if (seatsResult.success && seatsResult.data) {
+        // Update the seats data
+        this.seatsData = seatsResult.data;
+      }
     } catch (error) {
-      console.error('Failed to refresh data:', error);
+      console.error("Failed to refresh data:", error);
       // Could add error handling UI here
     } finally {
       this.isLoading = false;
@@ -190,15 +181,16 @@ class DashboardState {
   public toggleWeekendFilter(hide: boolean): void {
     this.hideWeekends = hide;
     this.applyFilters();
-  }  public async resetAllFilters(): Promise<void> {
+  }
+  public async resetAllFilters(): Promise<void> {
     this.languages.forEach((item) => (item.isSelected = false));
     this.editors.forEach((item) => (item.isSelected = false));
     this.teams.forEach((item) => (item.isSelected = false));
     this.hideWeekends = false;
-    this.hasPendingTeamChanges = false;  // Reset pending changes
+    this.hasPendingTeamChanges = false; // Reset pending changes
     this.applyFilters();
-    
-    // Refresh data from server (no URL changes)
+
+    // Refresh both metrics and seats data from server (no URL changes)
     await this.refreshDataWithTeams([]);
   }
 
@@ -206,6 +198,7 @@ class DashboardState {
     this.timeFrame = timeFrame;
     this.applyFilters();
   }
+
   private applyFilters(): void {
     const data = this.aggregatedDataByTimeFrame(this.hideWeekends);
 
@@ -268,6 +261,7 @@ class DashboardState {
 
     return editors.sort((a, b) => a.value.localeCompare(b.value));
   }
+
   private extractUniqueTeams(): DropdownFilterItem[] {
     const teams: DropdownFilterItem[] = [];
 
