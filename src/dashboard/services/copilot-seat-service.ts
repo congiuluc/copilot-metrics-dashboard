@@ -88,12 +88,14 @@ const getDataFromDatabase = async (
         value: filter.organization,
       });
     }    if (filter.team && filter.team.length > 0) {
+      // For seats data, teams are stored in the seats array as assigning_team
+      // We need to filter documents that have seats with matching assigning_team names
       if (filter.team.length === 1) {
-        querySpec.query += ` AND c.team = @team`;
+        querySpec.query += ` AND EXISTS (SELECT VALUE 1 FROM seat IN c.seats WHERE seat.assigning_team.name = @team)`;
         querySpec.parameters?.push({ name: "@team", value: filter.team[0] });
       } else {
-        const teamConditions = filter.team.map((_, index) => `c.team = @team${index}`).join(' OR ');
-        querySpec.query += ` AND (${teamConditions})`;
+        const teamConditions = filter.team.map((_, index) => `seat.assigning_team.name = @team${index}`).join(' OR ');
+        querySpec.query += ` AND EXISTS (SELECT VALUE 1 FROM seat IN c.seats WHERE ${teamConditions})`;
         filter.team.forEach((team, index) => {
           querySpec.parameters?.push({ name: `@team${index}`, value: team });
         });
@@ -148,7 +150,7 @@ const getCopilotSeatsFromDatabase = async (
       };
     }
     
-    const seatsData = aggregateSeatsData(data.response);
+    const seatsData = aggregateSeatsData(data.response, filter.team);
 
     return {
       status: "OK",
@@ -308,7 +310,7 @@ const getCopilotSeatsFromApi = async (
       };
     }
     
-    const seatsData = aggregateSeatsData(data.response);
+    const seatsData = aggregateSeatsData(data.response, filter.team);
 
     return {
       status: "OK",
@@ -396,7 +398,7 @@ const getNextUrlFromLinkHeader = (linkHeader: string | null): string | null => {
   return null;
 }
 
-const aggregateSeatsData = (data: CopilotSeatsData[]): CopilotSeatsData => {
+const aggregateSeatsData = (data: CopilotSeatsData[], teamFilter?: string[]): CopilotSeatsData => {
   let seats: SeatAssignment[] = [];
 
   if (data.length === 0) {
@@ -415,12 +417,44 @@ const aggregateSeatsData = (data: CopilotSeatsData[]): CopilotSeatsData => {
   }
 
   if (data.length === 1) {
-    return data[0];
+    // Apply team filtering if specified
+    let filteredSeats = data[0].seats;
+    if (teamFilter && teamFilter.length > 0) {
+      filteredSeats = data[0].seats.filter(seat => 
+        seat.assigning_team?.name && teamFilter.includes(seat.assigning_team.name)
+      );
+    }
+
+    // Recalculate totals based on filtered seats
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const activeSeatsCount = filteredSeats.filter(seat => {
+      if (!seat.last_activity_at) return false;
+      const lastActivityDate = new Date(seat.last_activity_at);
+      return lastActivityDate >= thirtyDaysAgo;
+    }).length;
+
+    return {
+      ...data[0],
+      total_seats: filteredSeats.length,
+      total_active_seats: activeSeatsCount,
+      seats: filteredSeats
+    };
   }
 
+  // For multiple documents, flatten and deduplicate seats
   const allSeats = data.flatMap(seatData => seatData.seats);
+  
+  // Apply team filtering if specified
+  let filteredSeats = allSeats;
+  if (teamFilter && teamFilter.length > 0) {
+    filteredSeats = allSeats.filter(seat => 
+      seat.assigning_team?.name && teamFilter.includes(seat.assigning_team.name)
+    );
+  }
+
   const uniqueSeatsMap = new Map<string, SeatAssignment>();
-  allSeats.forEach(seat => {
+  filteredSeats.forEach(seat => {
     if (!uniqueSeatsMap.has(seat.assignee.login)) {
       uniqueSeatsMap.set(seat.assignee.login, seat);
     }
@@ -428,11 +462,20 @@ const aggregateSeatsData = (data: CopilotSeatsData[]): CopilotSeatsData => {
 
   seats = Array.from(uniqueSeatsMap.values());
 
+  // Recalculate totals based on filtered and deduplicated seats
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const activeSeatsCount = seats.filter(seat => {
+    if (!seat.last_activity_at) return false;
+    const lastActivityDate = new Date(seat.last_activity_at);
+    return lastActivityDate >= thirtyDaysAgo;
+  }).length;
+
   const aggregatedData: CopilotSeatsData = {
     enterprise: data[0].enterprise,
     organization: data[0].organization,
-    total_seats: data[0].total_seats,
-    total_active_seats: data[0].total_active_seats,
+    total_seats: seats.length,
+    total_active_seats: activeSeatsCount,
     page: data[0].page,
     has_next_page: false,
     last_update: data[0].last_update,
