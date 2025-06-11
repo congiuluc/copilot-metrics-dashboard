@@ -206,5 +206,28 @@ namespace Microsoft.CopilotDashboard.DataIngestion.Services
 
             return seatPages;
         }
+
+
+        public async  Task<List<string>> GetAllTeamsAsync()
+        {
+            var scope = Environment.GetEnvironmentVariable("GITHUB_SCOPE");
+            var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")!;
+            if (string.IsNullOrWhiteSpace(scope) || scope == "enterprise")
+            {
+                var enterprise = Environment.GetEnvironmentVariable("GITHUB_ENTERPRISE")!;
+                var entSeats = await GetEnterpriseAssignedSeatsPagesAsync(enterprise, token);
+                return entSeats.SelectMany(pages => pages.Seats)
+                    .Where(seat => !string.IsNullOrWhiteSpace(seat.AssigningTeam?.Name))
+                    .Select(seat => seat.AssigningTeam.Name)
+                    .Distinct() 
+                    .ToList();
+            }
+           
+            var organization = Environment.GetEnvironmentVariable("GITHUB_ORGANIZATION")!;
+            var orgSeats = await GetOrganizationAssignedSeatsPagesAsync(organization, token);
+            return orgSeats.SelectMany(pages => pages.Seats)
+                .Where(seat => !string.IsNullOrWhiteSpace(seat.AssigningTeam?.Name))
+                .Select(seat => seat.AssigningTeam.Name).Distinct().ToList();
+        }
     }
 }

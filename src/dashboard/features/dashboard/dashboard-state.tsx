@@ -25,13 +25,13 @@ class DashboardState {
   public filteredData: CopilotUsageOutput[] = [];
   public languages: DropdownFilterItem[] = [];
   public editors: DropdownFilterItem[] = [];
+  public teams: DropdownFilterItem[] = [];
   public timeFrame: TimeFrame = "weekly";
   public hideWeekends: boolean = false;
 
   public seatsData: CopilotSeatsData = {} as CopilotSeatsData;
 
   private apiData: CopilotUsageOutput[] = [];
-
   public initData(
     data: CopilotUsageOutput[],
     seatsData: CopilotSeatsData
@@ -41,6 +41,7 @@ class DashboardState {
     this.onTimeFrameChange(this.timeFrame);
     this.languages = this.extractUniqueLanguages();
     this.editors = this.extractUniqueEditors();
+    this.teams = this.extractUniqueTeams();
     this.seatsData = seatsData;
   }
 
@@ -51,9 +52,16 @@ class DashboardState {
       this.applyFilters();
     }
   }
-
   public filterEditor(editor: string): void {
     const item = this.editors.find((l) => l.value === editor);
+    if (item) {
+      item.isSelected = !item.isSelected;
+      this.applyFilters();
+    }
+  }
+
+  public filterTeam(team: string): void {
+    const item = this.teams.find((t) => t.value === team);
     if (item) {
       item.isSelected = !item.isSelected;
       this.applyFilters();
@@ -64,10 +72,10 @@ class DashboardState {
     this.hideWeekends = hide;
     this.applyFilters();
   }
-
   public resetAllFilters(): void {
     this.languages.forEach((item) => (item.isSelected = false));
     this.editors.forEach((item) => (item.isSelected = false));
+    this.teams.forEach((item) => (item.isSelected = false));
     this.hideWeekends = false;
     this.applyFilters();
   }
@@ -76,12 +84,12 @@ class DashboardState {
     this.timeFrame = timeFrame;
     this.applyFilters();
   }
-
   private applyFilters(): void {
     const data = this.aggregatedDataByTimeFrame(this.hideWeekends);
 
     const selectedLanguages = this.languages.filter((item) => item.isSelected);
     const selectedEditors = this.editors.filter((item) => item.isSelected);
+    const selectedTeams = this.teams.filter((item) => item.isSelected);
 
     if (selectedLanguages.length !== 0) {
       data.forEach((item) => {
@@ -121,9 +129,8 @@ class DashboardState {
       });
     });
 
-    return languages;
+    return languages.sort((a, b) => a.value.localeCompare(b.value));
   }
-
   private extractUniqueEditors(): DropdownFilterItem[] {
     const editors: DropdownFilterItem[] = [];
     this.apiData.forEach((item) => {
@@ -138,7 +145,27 @@ class DashboardState {
       });
     });
 
-    return editors;
+    return editors.sort((a, b) => a.value.localeCompare(b.value));
+  }
+
+  private extractUniqueTeams(): DropdownFilterItem[] {
+    const teams: DropdownFilterItem[] = [];
+    
+    // Extract teams from seats data
+    if (this.seatsData && this.seatsData.seats) {
+      this.seatsData.seats.forEach((seat) => {
+        if (seat.assigning_team && seat.assigning_team.name) {
+          const teamName = seat.assigning_team.name;
+          const index = teams.findIndex((team) => team.value === teamName);
+          
+          if (index === -1) {
+            teams.push({ value: teamName, isSelected: false });
+          }
+        }
+      });
+    }
+
+    return teams.sort((a, b) => a.value.localeCompare(b.value));
   }
 
   private aggregatedDataByTimeFrame(hideWeekends: boolean) {
