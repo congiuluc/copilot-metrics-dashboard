@@ -198,7 +198,12 @@ class DashboardState {
     this.applyFilters();
 
     // Refresh both metrics and seats data from server (no URL changes)
-    await this.refreshDataWithTeams([]);
+    try {
+      await this.refreshDataWithTeams([]);
+    } catch (error) {
+      console.error("Failed to refresh data with teams:", error);
+      // Optionally, notify the user about the error (e.g., set an error state or trigger a UI notification)
+    }
   }
 
   public onTimeFrameChange(timeFrame: TimeFrame): void {
