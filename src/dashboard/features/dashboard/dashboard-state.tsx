@@ -25,6 +25,7 @@ class DashboardState {
   public filteredData: CopilotUsageOutput[] = [];
   public languages: DropdownFilterItem[] = [];
   public editors: DropdownFilterItem[] = [];
+  public teams: string[] = [];
   public timeFrame: TimeFrame = "weekly";
   public hideWeekends: boolean = false;
 
@@ -41,6 +42,7 @@ class DashboardState {
     this.onTimeFrameChange(this.timeFrame);
     this.languages = this.extractUniqueLanguages();
     this.editors = this.extractUniqueEditors();
+    this.teams = this.extractUniqueTeams(seatsData);
     this.seatsData = seatsData;
   }
 
@@ -139,6 +141,23 @@ class DashboardState {
     });
 
     return editors;
+  }
+
+  private extractUniqueTeams(seatsData: CopilotSeatsData): string[] {
+    const teams: string[] = [];
+    
+    if (!seatsData?.seats) {
+      return teams;
+    }
+    
+    seatsData.seats.forEach((seat) => {
+      const teamName = seat.assigning_team?.name;
+      if (teamName && !teams.includes(teamName)) {
+        teams.push(teamName);
+      }
+    });
+
+    return teams.sort();
   }
 
   private aggregatedDataByTimeFrame(hideWeekends: boolean) {
