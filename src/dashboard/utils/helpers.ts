@@ -71,7 +71,8 @@ export const getFeatures = () => {
   if (features.status !== "OK") {
     return {
       dashboard: true,
-      seats: true
+      seats: true,
+      premium: true
     }
   }
   return features.response;

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Menu, Users } from "lucide-react";
+import { LayoutDashboard, Menu, Users, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -34,6 +34,12 @@ const MenuItems = () => {
         <MainNavItem path="/seats">
           <Users size={18} strokeWidth={1.4} />
           Seats
+        </MainNavItem>
+      )}
+      {features.premium && (
+        <MainNavItem path="/premium">
+          <Star size={18} strokeWidth={1.4} />
+          Premium
         </MainNavItem>
       )}
     </>
