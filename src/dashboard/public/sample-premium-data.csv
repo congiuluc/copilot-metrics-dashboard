@@ -1,0 +1,21 @@
+Timestamp,User,Model,Requests Used,Exceeds Monthly Quota,Total Monthly Quota
+2025-06-06T08:09:58Z,user_1,gpt-4.1-2025-04-14,1.0,False,Unlimited
+2025-06-06T08:09:52Z,user_2,gpt-4o-2024-11-20,1.0,False,Unlimited
+2025-06-06T08:09:50Z,user_3,gpt-4o-2024-11-20,1.0,False,Unlimited
+2025-06-06T08:09:42Z,user_4,claude-3.5-sonnet,1.0,False,Unlimited
+2025-06-06T08:09:41Z,user_5,claude-sonnet-4,1.0,False,Unlimited
+2025-06-06T08:09:31Z,user_6,gpt-4.1-2025-04-14,1.0,False,Unlimited
+2025-06-06T08:09:30Z,user_7,claude-3.7-sonnet-thought,1.25,False,Unlimited
+2025-06-06T08:09:25Z,user_2,gpt-4o-2024-11-20,1.0,False,Unlimited
+2025-06-06T08:09:23Z,user_8,claude-sonnet-4,1.0,False,Unlimited
+2025-06-06T08:09:23Z,user_9,gpt-4.1-2025-04-14,1.0,False,Unlimited
+2025-06-06T08:09:22Z,user_10,claude-sonnet-4,1.0,False,Unlimited
+2025-06-06T08:09:21Z,user_11,gpt-4.1-2025-04-14,1.0,False,Unlimited
+2025-06-06T08:09:00Z,user_12,gpt-4.1-2025-04-14,1.0,False,Unlimited
+2025-06-06T08:08:33Z,user_13,claude-3.7-sonnet,1.0,False,Unlimited
+2025-06-06T08:08:29Z,user_14,gpt-4.1-vision,1.0,False,Unlimited
+2025-06-06T08:08:19Z,user_15,gpt-4.1-2025-04-14,1.0,False,Unlimited
+2025-06-06T08:08:15Z,user_2,gpt-4o-2024-11-20,1.0,False,Unlimited
+2025-06-06T08:07:54Z,user_14,gpt-4.1-vision,1.0,False,Unlimited
+2025-06-06T08:07:51Z,user_16,gpt-4.1-2025-04-14,1.0,False,Unlimited
+2025-06-06T08:07:37Z,user_2,gpt-4o-2024-11-20,1.0,False,Unlimited

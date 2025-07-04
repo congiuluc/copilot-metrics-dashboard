@@ -177,3 +177,33 @@ export interface CopilotUsage {
     copilot_dotcom_chat: CopilotDotcomChatMetrics;
     copilot_dotcom_pull_requests: CopilotDotcomPullRequestsMetrics;
   }
+
+  // Premium Request Models
+  export interface PremiumRequestRecord {
+    timestamp: string;
+    user: string;
+    model: string;
+    requestsUsed: number;
+    exceedsMonthlyQuota: boolean;
+    totalMonthlyQuota: string;
+  }
+
+  export interface PremiumRequestStats {
+    totalPremiumRequests: number;
+    totalUniqueUsers: number;
+    totalModels: number;
+    totalInteractions: number;
+    averageUserRequests: number;
+  }
+
+  export interface ModelRequestData {
+    model: string;
+    requests: number;
+    users: number;
+  }
+
+  export interface ModelUsageData {
+    model: string;
+    usage: number;
+    percentage: number;
+  }

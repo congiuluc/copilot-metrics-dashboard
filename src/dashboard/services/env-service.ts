@@ -11,6 +11,7 @@ interface GitHubConfig {
 interface FeaturesConfig {
   dashboard: boolean;
   seats: boolean;
+  premium: boolean;
 }
 
 export const ensureGitHubEnvConfig = (): ServerActionResponse<GitHubConfig> => {
@@ -99,11 +100,13 @@ export const ensureGitHubEnvConfig = (): ServerActionResponse<GitHubConfig> => {
 export const featuresEnvConfig = (): ServerActionResponse<FeaturesConfig> => {
   const enableDashboardFeature = process.env.ENABLE_DASHBOARD_FEATURE !== "false" ? true : false;
   const enableSeatsFeature = process.env.ENABLE_SEATS_FEATURE !== "false" ? true : false;
+  const enablePremiumFeature = process.env.ENABLE_PREMIUM_FEATURE !== "false" ? true : false;
   return {
     status: "OK",
     response: {
       dashboard: enableDashboardFeature,
       seats: enableSeatsFeature,
+      premium: enablePremiumFeature,
     },
   };
 };
